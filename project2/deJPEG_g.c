@@ -39,7 +39,7 @@ void writeRaw(float **img);
 int main(int argc, char **argv)
 {
 	float **img, **block;
-	int index, prevDC = 0;
+	int i, index, prevDC = 0;
 	FILE *output;
 	char *buff = (char*)malloc(sizeof(char)*BUFF_SIZE);
 	memset(buff, 0, sizeof(char)*BUFF_SIZE);
@@ -52,13 +52,14 @@ int main(int argc, char **argv)
 
 	readImg(&img, buff);
 	for( index=0; index<bNums; index++){
+		for( i=0; i<8; i++)
+			memset(block[i], 0, sizeof(float)*8);
 		deDC(&prevDC, &(bInfo->dc), &buff_seek);
 		deAC(&(bInfo->ac), &buff_seek);
 		izz(block, bInfo);
 		iquanBlock(block);
 		idct2(block, 8);
 		mergeBlock(block, img, index);
-		printf("Block %d fin.\n", index);
 	}
 	writeRaw(img);
 	puts("Decode done!");
@@ -258,6 +259,7 @@ void deAC(struct AC_list **ac_list, char **buff_seek)
 			memset(ac_curr->next, 0, sizeof(struct AC_list));
 		}
 
+		isNeg = 0;
 		ac_curr = ac_curr->next;
 	}
 }
@@ -288,10 +290,11 @@ void izz(float **block, struct blockInfo *bInfo)
 		else{
 			int endBlock, m, n;
 			for( endBlock=index; endBlock<64; endBlock++){
-				n = ZigZagSequenceGray64[index][0];
-				m = ZigZagSequenceGray64[index][1];
+				n = ZigZagSequenceGray64[endBlock][0];
+				m = ZigZagSequenceGray64[endBlock][1];
 				block[m][n] = 0.0;
 			}
+			break;
 		}
 		block[i][j] = val;
 	}
